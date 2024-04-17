@@ -36,7 +36,7 @@ callback = CallbackList([checkpoint_callback, eval_callback])
 
 policy_kwargs = dict(ortho_init=False,activation_fn=th.nn.ReLU,net_arch=dict(pi=[512,256,256,128,128], vf=[512,256,256,128,128]))
 # It will check your custom environment and output additional warnings if needed
-model = PPO('MlpPolicy',env,policy_kwargs=policy_kwargs,verbose=2,learning_rate=0.0001,clip_range=0.2)
+model = PPO('MlpPolicy',env,policy_kwargs=policy_kwargs,verbose=2,learning_rate=0.0001,clip_range=0.2，tensorboard_log = "./tensornoard/MagnetEnv_OSC-v0/")
 model.learn(3000000,callback=callback,reset_num_timesteps=False)
 t = env.get_episode_rewards()
 model.save("arm_1_modeP")

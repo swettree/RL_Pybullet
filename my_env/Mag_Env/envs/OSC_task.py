@@ -9,7 +9,7 @@ from gymnasium.utils import seeding
 import gymnasium as gym
 
 u0 = 4 * np.pi * 1e-7
-MAX_EPISODE_LEN = 1000
+MAX_EPISODE_LEN = 2000
 
 gui = 1
 direct = 0
@@ -18,7 +18,7 @@ direct = 0
 DIM_OBS = 24 # no. of dimensions in observation space
 DIM_ACT = 1 # no. of dimensions in action space
 #target_position = (1.1,0.0,0.55)
-target_position = (1.1,0.0,0.55)
+target_position = (1.1,0.0,0.60)
 
 
 class MagnetEnv_OSC(gym.Env):
@@ -63,12 +63,12 @@ class MagnetEnv_OSC(gym.Env):
                 high = np.array([5,  5,  5,  5,  5,  5])
             )
 
-        #tip pos(3),tip ori(3),arm vel(6),arm pos(6),target obj pos(3) ,obj_pos, obj_vel(3)
+        #tip pos(3),tip ori(3),tip vel(3),arm vel(6),arm pos(6),target obj pos(3) ,obj_pos, obj_vel(3)
         self.observation_space = gym.spaces.box.Box(    #change later
             # low=np.array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]),
             # high=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-            low = np.array([-2,-2,-2,-3.14 ,-3.14, -3.14,-1,-1,-1,-1,-1,-1,-3.14 ,-3.14, -3.14, -3.14,-3.14,-3.14,-2,-2,-2,-2,-2,-2,-2,-2,-2]),
-            high = np.array([2, 2, 2, 3.14, 3.14, 3.14, 1, 1, 1, 1, 1, 1,3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+            low = np.array([-2,-2,-2,-3.14 ,-3.14, -3.14,-0.5,-0.5,-0.5,-1,-1,-1,-1,-1,-1,-3.14 ,-3.14, -3.14, -3.14,-3.14,-3.14,-2,-2,-2,-2,-2,-2,-2,-2,-2]),
+            high = np.array([2, 2, 2, 3.14, 3.14, 3.14, 0.5,0.5,0.5,1, 1, 1, 1, 1, 1,3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 2, 2, 2, 2, 2, 2, 2, 2, 2])
         )
 
         #self.reset()
@@ -205,6 +205,12 @@ class MagnetEnv_OSC(gym.Env):
             observation.extend(list(orn))
             #observation_lim.extend([[-1, 1], [-1, 1], [-1, 1], [-1, 1]])
 
+        # ------------------------- #
+        # --- tip vel 3D--- #
+        # ------------------------- #
+
+        tip_vel = self.agent.get_tip_vel()
+        observation.extend(list(tip_vel))
         # --------------------------------- #
         # --- joint velocity 6--- #
         # --------------------------------- #
@@ -430,11 +436,11 @@ class MagnetEnv_OSC(gym.Env):
         state_position_tip, _ = self.agent.get_tip_pose()
 
 
-        #di物体目标位置与当前位置的欧式距离
-        result0 = []
-        for i in range(len(target_position)):
-            result0.append(pow(target_position[i] - state_object[i],2))
-        d0 = np.sqrt(np.sum(result0))
+        # #di物体目标位置与当前位置的欧式距离
+        # result0 = []
+        # for i in range(len(target_position)):
+        #     result0.append(pow(target_position[i] - state_object[i],2))
+        # d0 = np.sqrt(np.sum(result0))
 
 
         """test code"""
@@ -514,18 +520,20 @@ class MagnetEnv_OSC(gym.Env):
             result1.append(pow(target_position[i] - state_object[i],2))
         d1 = np.sqrt(np.sum(result1))
 
-        if d1 <= d0:
-            r1 = 0
-        else:
-            r1 = -5
+        r1 = -np.exp(d1)
+        # if d1 <= d0:
+        #     r1 = 0
+        # else:
+        #     r1 = -5
 
         # 限制机械臂移动
         result2 = [abs(action[i]) for i in range(len(action))]
-        r2 = -np.exp(sum(result2))
+        r2 = -np.sum(result2)
 
 
+        obj_vel, _ = self._p.getBaseVelocity(self.obj)
         #是否悬浮在固定位置
-        if 0.65 > state_object[2] > 0.55:
+        if 0.62 > state_object[2] > 0.58:
             r3 = 50
         else:
             r3 = -5
@@ -549,14 +557,14 @@ class MagnetEnv_OSC(gym.Env):
         if contact1:
             r5 = -1
         else:
-            r5 = 0
+            r5 = 20 - np.sum(obj_vel)
 
         #是否和地面碰撞
         contact2 = self._p.getContactPoints(self.planeID,self.obj)
         if contact2:
             self.truncated = True
         #reward = Q1*r1 + Q3*r3 + Q4*r4
-        reward = r1  + r2 + r3 +r5
+        reward = r1  + r2 + r3 + r4+ r5
 
 
 

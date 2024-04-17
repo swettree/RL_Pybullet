@@ -212,6 +212,10 @@ class Manipulator:
         result = self._p.getLinkState(self.arm, self.ik_idx)
         return result[0], result[1]
 
+    def get_tip_vel(self):
+        _,_,_,_,_,_,result,_ = self._p.getLinkState(self.arm, self.ik_idx,1)
+        return result
+    
     # 设置debug时的按键
     def add_debug_param(self):
         current_angle = [j[0] for j in self.get_joint_states()]
