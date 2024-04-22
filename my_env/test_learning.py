@@ -16,9 +16,9 @@ import pickle
 import torch as th
 
 
-env = gym.make('MagnetEnv-v0',gui=1, mode='P',P_sens=1,P_max_force=60)
+env = gym.make('MagnetEnv_OSC-v0',gui=1, mode='P',P_sens=1,P_max_force=60)
 
-model = PPO.load("logs/best_model.zip", env=env,custom_objects={
+model = PPO.load("Mag_OSC_model.zip", env=env,custom_objects={
             "learning_rate": 0.0,
             "lr_schedule": lambda _: 0.0,
             "clip_range": lambda _: 0.0,})

@@ -20,10 +20,7 @@ import torch as th
 env = gym.make('MagnetEnv_OSC-v0',gui=1, mode='P',P_sens=1,P_max_force=60)
 # Parallel environments
 
-
-
-
-env = Monitor(env,'monitor_1')
+env = Monitor(env,'monitor_Mag')
 
 eval_callback = EvalCallback(env, best_model_save_path='./logs/',
                              log_path='./logs/', eval_freq=65000,
@@ -34,19 +31,19 @@ callback = CallbackList([checkpoint_callback, eval_callback])
 
 
 
-policy_kwargs = dict(ortho_init=False,activation_fn=th.nn.ReLU,net_arch=dict(pi=[512,256,256,128,128], vf=[512,256,256,128,128]))
+policy_kwargs = dict(ortho_init=False,activation_fn=th.nn.ReLU,net_arch=dict(pi=[256,256,128,128], vf=[256,256,128,128]))
 # It will check your custom environment and output additional warnings if needed
-model = PPO('MlpPolicy',env,policy_kwargs=policy_kwargs,verbose=2,learning_rate=0.0001,clip_range=0.2，tensorboard_log = "./tensornoard/MagnetEnv_OSC-v0/")
-model.learn(3000000,callback=callback,reset_num_timesteps=False)
+model = PPO('MlpPolicy',env,policy_kwargs=policy_kwargs,verbose=1,learning_rate=0.0001,clip_range=0.2, tensorboard_log = "./tensorboard/MagnetEnv_OSC-v0/")
+model.learn(2000000,callback=callback,reset_num_timesteps=False)
 t = env.get_episode_rewards()
-model.save("arm_1_modeP")
+model.save("Mag_OSC_model")
 
 
 #model = PPO.load('logs/best_model.zip',env)
 del model
 
 
-file_name = "rewards_1.pkl"
+file_name = "rewards_Mag.pkl"
 op_file = open(file_name,'wb')
 pickle.dump(t, op_file)
 op_file.close()

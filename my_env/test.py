@@ -1,10 +1,11 @@
 from Mag_Env.envs.joint_pos_task import MagnetEnv
 from Mag_Env.envs.OSC_task import MagnetEnv_OSC
+from Mag_Env.envs.OSC_topoint_task import Env_topoint_OSC
 SLEEP = False
 
 
 #env = MagnetEnv(gui=1)
-env = MagnetEnv_OSC(gui=1)
+env = Env_topoint_OSC(gui=1)
 
 
 env.reset()

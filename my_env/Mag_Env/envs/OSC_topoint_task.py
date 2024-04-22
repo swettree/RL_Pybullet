@@ -18,10 +18,10 @@ direct = 0
 DIM_OBS = 24 # no. of dimensions in observation space
 DIM_ACT = 1 # no. of dimensions in action space
 #target_position = (1.1,0.0,0.55)
-target_position = (1.1,0.0,0.80)
+#target_position = (0.5,0.0,1.0)
 
 
-class MagnetEnv_OSC(gym.Env):
+class Env_topoint_OSC(gym.Env):
     metadata = {'render.modes': ['human']}
     def __init__(self,gui=1,mode ="P",record=False,T_sens = 200, V_sens=1, P_sens = 1, P_max_force=300):
 
@@ -37,7 +37,7 @@ class MagnetEnv_OSC(gym.Env):
         self.P_sens = P_sens
         self.P_max_force = P_max_force
         self.render_mode = None
-        
+        self.seed(2)
 
         if(mode == 'T'):
             print('TORQUE CONTROL')
@@ -63,12 +63,12 @@ class MagnetEnv_OSC(gym.Env):
                 high = np.array([5,  5,  5,  5,  5,  5])
             )
 
-        #tip pos(3),tip ori(3),tip vel(3),arm vel(6),arm pos(6),target obj pos(3) ,obj_pos, obj_vel(3)
+        #tip pos(3),tip ori(3),tip vel(3),arm vel(6),arm pos(6),target tip pos(3) ,|| obj_pos(3), obj_vel(3),distance between obj and ma(1)
         self.observation_space = gym.spaces.box.Box(    #change later
             # low=np.array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]),
             # high=np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-            low = np.array([-2,-2,-2,-3.14 ,-3.14, -3.14,-0.5,-0.5,-0.5,-1,-1,-1,-1,-1,-1,-3.14 ,-3.14, -3.14, -3.14,-3.14,-3.14,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1]),
-            high = np.array([2, 2, 2, 3.14, 3.14, 3.14, 0.5,0.5,0.5,1, 1, 1, 1, 1, 1,3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 2, 2, 2, 2, 2, 2, 2, 2, 2,1])
+            low = np.array([-2,-2,-2,-3.14 ,-3.14, -3.14,-0.5,-0.5,-0.5,-1,-1,-1,-1,-1,-1,-3.14 ,-3.14, -3.14, -3.14,-3.14,-3.14,-2,-2,-2]),
+            high = np.array([2, 2, 2, 3.14, 3.14, 3.14, 0.5,0.5,0.5,1, 1, 1, 1, 1, 1,3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 2, 2, 2])
         )
 
         #self.reset()
@@ -138,6 +138,9 @@ class MagnetEnv_OSC(gym.Env):
 
 
         self.magnet_init(150, 10)
+        self.target_position = self.generate_random_position()
+
+
 
         self.obs = self.get_observation()
 
@@ -243,41 +246,41 @@ class MagnetEnv_OSC(gym.Env):
         # --- obj target poses--- #
         # ------------------- #
 
-        observation.extend(list(target_position))
+        observation.extend(list(self.target_position))
         #15
         #return observation, observation_lim
         #print(observation)
 
 
-        # ------------------- #
-        # --- obj position 3-- #
-        # ------------------- #
+        # # ------------------- #
+        # # --- obj position 3-- #
+        # # ------------------- #
 
 
-        obj_pos, obj_ori = self._p.getBasePositionAndOrientation(self.obj)
-        obj_ori_euler = self._p.getEulerFromQuaternion(obj_ori)
+        # obj_pos, obj_ori = self._p.getBasePositionAndOrientation(self.obj)
+        # obj_ori_euler = self._p.getEulerFromQuaternion(obj_ori)
 
-        observation.extend(list(obj_pos))
-        #observation.extend(list(obj_ori_euler))
+        # observation.extend(list(obj_pos))
+        # #observation.extend(list(obj_ori_euler))
         
-        # ------------------- #
-        # --- obj vel 3-- #
-        # ------------------- #
+        # # ------------------- #
+        # # --- obj vel 3-- #
+        # # ------------------- #
         
-        obj_vel, _ = self._p.getBaseVelocity(self.obj)
-        observation.extend(list(obj_vel))
+        # obj_vel, _ = self._p.getBaseVelocity(self.obj)
+        # observation.extend(list(obj_vel))
 
-        # --------------------------------- #
-        # --- distance between obj and ma 1 #
-        # --------------------------------- #
+        # # --------------------------------- #
+        # # --- distance between obj and ma 1 #
+        # # --------------------------------- #
 
-        distance = []
-        # di+1物体目标位置与当前位置的欧式距离
-        for i in range(len(target_position)):
-            distance.append(pow(obj_pos[i] - tip_pos[i],2))
-        d1 = np.sqrt(np.sum(distance))
+        # distance = []
+        # # di+1物体目标位置与当前位置的欧式距离
+        # for i in range(len(target_position)):
+        #     distance.append(pow(obj_pos[i] - tip_pos[i],2))
+        # d1 = np.sqrt(np.sum(distance))
 
-        observation.append(d1)
+        # observation.append(d1)
 
 
         return observation
@@ -525,87 +528,79 @@ class MagnetEnv_OSC(gym.Env):
 
     # Dense Reward:
 
-
+        time_penalty = -0.1
 
         result1 = []
         # di+1物体目标位置与当前位置的欧式距离
-        for i in range(len(target_position)):
-            result1.append(pow(target_position[i] - state_object[i],2))
+        for i in range(len(self.target_position)):
+            result1.append(pow(self.target_position[i] - state_position_tip[i],2))
         d1 = np.sqrt(np.sum(result1))
 
         r1 = -np.exp(d1)
+
+        
+        result2 = []
+        tip_vel = self.agent.get_tip_vel()
+        for i in range(len(tip_vel)):
+            result2.append(pow(tip_vel[i],2))
+        v1 = np.sqrt(np.sum(result1))
+
+        
         # if d1 <= d0:
         #     r1 = 0
-        # else:
+        # els
         #     r1 = -5
 
         # 限制机械臂移动
-        # result2 = [abs(action[i]) for i in range(len(action))]
+        # result2 = [abs(action[i]) for in range(len(action))]
         # r2 = -np.sum(result2)
 
 
         
 
-        obj_vel, _ = self._p.getBaseVelocity(self.obj)
+        # obj_vel, _ = self._p.getBaseVelocity(self.obj)
 
-        result2 = []
-        for i in range(len(obj_vel)):
-            result2.append(pow(obj_vel[i],2))
+        # # 是否ma，mc吸在一起
+        # contacts = self._p.getContactPoints(self.obj, self.agent.arm)
+        # if contacts:
+        #     #self.truncated = True
+        #     #print("Collision detected!")
+        #     #done = True
+        #     r4 = -4
 
-        v1 = np.sqrt(np.sum(result2))
-
-        # 是否ma，mc吸在一起
-        contacts = self._p.getContactPoints(self.obj, self.agent.arm)
-        if contacts:
-            r2 = -50
-            self.truncated = True
-            #print("Collision detected!")
-            #done = True
-        else:
-            r2 = 0
-
-        
-        if 0.82 > state_object[2] > 0.78 and v1 < 0.05:
+        # else:
+        #     if 0.62 > state_object[2] > 0.58:
                 
-            r4 = 10
+        #         r4 = 10 - np.sum(obj_vel)
 
-        else:
-            r4 = 0
+        #     else:
+        #         r4 = -2
 
-        # 是否和桌面接触
+        # # 是否和桌面接触
         
-        contact1 = self._p.getContactPoints(self.env_dict["table"], self.obj)
-        if contact1:
-            r5 = -2
-        else:
-            r5 = 0
+        # contact1 = self._p.getContactPoints(self.env_dict["table"], self.obj)
+        # if contact1:
+        #     r5 = -4
+        # else:
+        #     r5 = 0
 
+        # #是否和地面碰撞
+        # contact2 = self._p.getContactPoints(self.planeID,self.obj)
+        # if contact2:
+        #     self.truncated = True
+        # #reward = Q1*r1 + Q3*r3 + Q4*r4
+
+
+        reward = r1 
+        reward += time_penalty
         
-        #是否和地面碰撞
-        contact2 = self._p.getContactPoints(self.planeID,self.obj)
-        if contact2:
-            self.truncated = True
-        #reward = Q1*r1 + Q3*r3 + Q4*r4
-
-        contact3 = self._p.getContactPoints(self.env_dict["table"], self.agent.arm)
-        if contact3:
-            r6 = -50
-            self.truncated = True
-
-        else:
-            r6 = 0
-
-        reward = r1 + r4 + r5 + r6
 
 
-        stable_reward = 100
         # End episode
         self.step_counter += 1
-        if self.step_counter > MAX_EPISODE_LEN :
+        if self.step_counter > MAX_EPISODE_LEN or (d1 < 0.05 and v1 < 0.01):
             # reward = 0
             #self.done = True
-            if d1 < 0.01 and v1 < 0.05:
-                reward += stable_reward
             self.terminated = True
         # print("REWARD: ",reward)
         self.obs= self.get_observation()
@@ -633,11 +628,23 @@ class MagnetEnv_OSC(gym.Env):
 
 
     def seed(self,seed=None):
-        self.np_random, seed = gym.utils.seeding.np_random(seed)
-        return [seed]
+        self.np_random, seed = gym.utils.seeding.np_random(seed = seed)
+        return seed
 
     def close(self):
         self._p.disconnect()
 
 
+    def generate_random_position(self):
+        # 设置随机种子
+        seed = self.seed()
 
+        np_random = np.random.RandomState(43)
+
+        # 生成随机位置，每个分量的取值范围为 [0, 1)
+        x = np_random.rand()
+        y = np_random.rand()
+        z = 0.5 + np_random.rand() * 0.5
+
+        # 返回随机位置的数组，形状为 (3,)
+        return np.array([x, y, z])
