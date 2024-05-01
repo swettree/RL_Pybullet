@@ -9,7 +9,7 @@ from gymnasium.utils import seeding
 import gymnasium as gym
 
 u0 = 4 * np.pi * 1e-7
-MAX_EPISODE_LEN = 4000
+MAX_EPISODE_LEN = 6000
 
 gui = 1
 direct = 0
@@ -532,53 +532,25 @@ class MagnetEnv_OSC(gym.Env):
         for i in range(len(target_position)):
             result1.append(pow(target_position[i] - state_object[i],2))
         d1 = np.sqrt(np.sum(result1))
-
-        r1 = -np.exp(d1)
-        # if d1 <= d0:
-        #     r1 = 0
-        # else:
-        #     r1 = -5
-
-        # 限制机械臂移动
-        # result2 = [abs(action[i]) for i in range(len(action))]
-        # r2 = -np.sum(result2)
+        r1 = -np.exp(0.4 + d1) + 1
 
 
-        
-
-        obj_vel, _ = self._p.getBaseVelocity(self.obj)
 
         result2 = []
+        obj_vel, _ = self._p.getBaseVelocity(self.obj)
         for i in range(len(obj_vel)):
             result2.append(pow(obj_vel[i],2))
-
         v1 = np.sqrt(np.sum(result2))
 
-        # 是否ma，mc吸在一起
-        contacts = self._p.getContactPoints(self.obj, self.agent.arm)
-        if contacts:
-            r2 = -50
-            self.truncated = True
-            #print("Collision detected!")
-            #done = True
-        else:
-            r2 = 0
-
-        
-        if 0.82 > state_object[2] > 0.78 and v1 < 0.05:
-                
-            r4 = 10
-
-        else:
-            r4 = 0
+        # if d1 < 0.01:
+        #     r2 = -np.exp( 0.3 + v1) + 1
 
         # 是否和桌面接触
-        
         contact1 = self._p.getContactPoints(self.env_dict["table"], self.obj)
         if contact1:
-            r5 = -2
+            r3 = -2
         else:
-            r5 = 0
+            r3 = 0
 
         
         #是否和地面碰撞
@@ -587,25 +559,45 @@ class MagnetEnv_OSC(gym.Env):
             self.truncated = True
         #reward = Q1*r1 + Q3*r3 + Q4*r4
 
-        contact3 = self._p.getContactPoints(self.env_dict["table"], self.agent.arm)
-        if contact3:
-            r6 = -50
-            self.truncated = True
 
+        # 限制ma和mc的距离
+        # d2 = abs(state_position_tip[2] - state_object[2])
+
+        # if d2 < 0.1:
+        #     r4 = -1
+        # else:
+        #     r4 = 0
+
+        # 是否ma，mc吸在一起
+        contacts = self._p.getContactPoints(self.obj, self.agent.arm)
+        if contacts:
+            r4 = -6
+            
+            #print("Collision detected!")
+            #done = True
         else:
-            r6 = 0
-
-        reward = r1 + r4 + r5 + r6
+            r4 = 0
 
 
-        stable_reward = 100
+        # 稀疏奖励
+        if d1 < 0.0001 and v1 < 0.0001:
+            r5 = 10
+        else:
+            r5 = -1
+
+        reward = r1 + r3 + r4 + r5
+
+
+        stable_reward = 200
         # End episode
         self.step_counter += 1
         if self.step_counter > MAX_EPISODE_LEN :
             # reward = 0
             #self.done = True
-            if d1 < 0.01 and v1 < 0.05:
+            if d1 < 0.0001 and v1 < 0.0001:
                 reward += stable_reward
+
+                
             self.terminated = True
         # print("REWARD: ",reward)
         self.obs= self.get_observation()

@@ -16,7 +16,7 @@ import torch as th
 
 
 # 重新创建环境
-env = gym.make('Env_topoint_OSC-v0', gui=1, mode='P', P_sens=1, P_max_force=60)
+env = gym.make('MagnetEnv_OSC-v0', gui=1, mode='P', P_sens=1, P_max_force=60)
 env = Monitor(env, 'monitor_point')
 
 # 设置回调
@@ -28,10 +28,10 @@ callback = CallbackList([checkpoint_callback, eval_callback])
 model = PPO.load("./logs/best_model", env)
 
 # 继续训练
-model.learn(total_timesteps=300000, callback=callback, reset_num_timesteps=False)
+model.learn(total_timesteps=1000000, callback=callback, reset_num_timesteps=False)
 
 # 保存模型
-model.save("topoint_OSC_model_continued")
+model.save("MagnetEnv_OSC_continued")
 
 # 清理资源
 del model

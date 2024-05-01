@@ -31,10 +31,10 @@ callback = CallbackList([checkpoint_callback, eval_callback])
 
 
 
-policy_kwargs = dict(ortho_init=False,activation_fn=th.nn.ReLU,net_arch=dict(pi=[256,256,128,128], vf=[256,256,128,128]))
+policy_kwargs = dict(ortho_init=False,activation_fn=th.nn.ReLU,net_arch=dict(pi=[256,128,64], vf=[256,128,64]))
 # It will check your custom environment and output additional warnings if needed
 model = PPO('MlpPolicy',env,policy_kwargs=policy_kwargs,verbose=1,learning_rate=0.0001,clip_range=0.2, tensorboard_log = "./tensorboard/MagnetEnv_OSC-v0/")
-model.learn(2000000,callback=callback,reset_num_timesteps=False)
+model.learn(6000000,callback=callback,reset_num_timesteps=False)
 t = env.get_episode_rewards()
 model.save("Mag_OSC_model")
 

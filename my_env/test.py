@@ -48,9 +48,9 @@ while True:
     #print("mc_hat:", env.mc_hat)
 
     #print("target_mc:", env.target_mc_Orientation_quaternion)
-
+    torque = env.get_magnetic_torque()
     f = env.total_force()
-    print("f:", f)
+    print(env.D())
     #print("torque:",torque)
     #print("t:", t)
     # env.calculate_mc_hat()
