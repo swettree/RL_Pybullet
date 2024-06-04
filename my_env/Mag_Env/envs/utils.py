@@ -72,19 +72,20 @@ def create_object(p, obj_type, size, position, rotation=[0, 0, 0], mass=1, color
 
 def create_tabletop(p):
     objects = {}
-    objects["base"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.15, 0.15, 0.2],
-                                    position=[0., 0., 0.2], color=[0.5, 0.5, 0.5, 1.0], with_link=True)
-    objects["table"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.5, 0.5, 0.2],
-                                     position=[0.8, 0, 0.2], color=[1.0, 1.0, 1.0, 1.0])
+    objects["table"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.6, 0.6, 0.05/2],
+                                     position=[0, 0, 1], color=[1.0, 1.0, 1.0, 1.0])
+    objects["base"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.1, 0.1, 0.1/2],
+                                    position=[-0.5, 0., 1.075], color=[1.0, 1.0, 1.0, 1.0], with_link=True)
+
     # walls
-    objects["wall1"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.5, 0.01, 0.05],
-                                     position=[0.8, -0.5, 0.45], color=[1.0, 0.6, 0.6, 1.0])
-    objects["wall2"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.5, 0.01, 0.05],
-                                     position=[0.8, 0.5, 0.45], color=[1.0, 0.6, 0.6, 1.0])
-    objects["wall3"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.01, 0.5, 0.05],
-                                     position=[0.3, 0., 0.45], color=[1.0, 0.6, 0.6, 1.0])
-    objects["wall4"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.01, 0.5, 0.05],
-                                     position=[1.3, 0., 0.45], color=[1.0, 0.6, 0.6, 1.0])
+    # objects["wall1"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.5, 0.01, 0.05],
+    #                                  position=[0.8, -0.5, 0.45], color=[1.0, 0.6, 0.6, 1.0])
+    # objects["wall2"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.5, 0.01, 0.05],
+    #                                  position=[0.8, 0.5, 0.45], color=[1.0, 0.6, 0.6, 1.0])
+    # objects["wall3"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.01, 0.5, 0.05],
+    #                                  position=[0.3, 0., 0.45], color=[1.0, 0.6, 0.6, 1.0])
+    # objects["wall4"] = create_object(p, p.GEOM_BOX, mass=0, size=[0.01, 0.5, 0.05],
+    #                                  position=[1.3, 0., 0.45], color=[1.0, 0.6, 0.6, 1.0])
     return objects
 
 

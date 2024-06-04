@@ -4,8 +4,8 @@ from Mag_Env.envs.OSC_topoint_task import Env_topoint_OSC
 SLEEP = False
 
 
-#env = MagnetEnv(gui=1)
-env = Env_topoint_OSC(gui=1)
+env = MagnetEnv_OSC(gui=1)
+# env = Env_topoint_OSC(gui=1)
 
 
 env.reset()
@@ -48,9 +48,8 @@ while True:
     #print("mc_hat:", env.mc_hat)
 
     #print("target_mc:", env.target_mc_Orientation_quaternion)
-    torque = env.get_magnetic_torque()
-    f = env.total_force()
-    print(env.D())
+
+    # print(env.D())
     #print("torque:",torque)
     #print("t:", t)
     # env.calculate_mc_hat()
@@ -66,10 +65,10 @@ while True:
     #env.agent.add_debug_param()
     #env.agent.update_debug()
 
-    env.test_step(count=13)
-    #print("f:",env.get_magnetic_force())
-    # if (f[2] - 0.1451436 > 0):
-    #     action = action2
-    # else:
-    #     action = action1
+    env.test_step()
+    contact1 = env._p.getContactPoints(env.env_dict["table"], env.obj)
+    contact2 = env._p.getContactPoints(env.obj, env.agent.arm)
+    # if (contact2):
+    #     env.reset()
+
 

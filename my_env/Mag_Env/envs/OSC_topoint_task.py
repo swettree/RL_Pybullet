@@ -360,6 +360,7 @@ class Env_topoint_OSC(gym.Env):
     def D(self):
         I = np.eye(3)
         p_delta_hat_outer = np.outer(self.p_delta_hat, self.p_delta_hat)
+        
         return 3 * p_delta_hat_outer - I
 
     def magnet_update(self):
@@ -432,6 +433,7 @@ class Env_topoint_OSC(gym.Env):
     def get_magnetic_torque(self):
         magnetic_torque = u0 * self.ma_norm * self.mc_norm / (4 * np.pi * (self.p_delta_norm ** 3)) * np.dot(np.multiply(self.mc_hat, self.D()), self.ma_hat)
         #magnetic_torque = u0 * self.ma_norm * self.mc_norm / (4 * np.pi * (self.p_delta_norm ** 3)) * np.multiply(self.mc_hat, np.dot(self.D(), self.ma_hat))
+        
         return magnetic_torque
 
 

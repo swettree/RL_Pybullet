@@ -17,7 +17,7 @@ import torch as th
 
 
 
-env = gym.make('MagnetEnv_OSC-v0',gui=1, mode='P',P_sens=1,P_max_force=60)
+env = gym.make('MagnetEnv_OSC-v0',gui=0, mode='P',P_sens=1,P_max_force=60)
 # Parallel environments
 
 env = Monitor(env,'monitor_Mag')

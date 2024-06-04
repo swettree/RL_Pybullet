@@ -16,13 +16,14 @@ class Manipulator:
         # 获取物理引擎的固定时间步长
         #self._timestep = 1/1920
         self._timestep = self._p.getPhysicsEngineParameters()["fixedTimeStep"]
+        #self._freq = int(1. / 120.0)
         self._freq = int(1. / self._timestep)
         self.arm = self._p.loadURDF(
             fileName=path,
             basePosition=position,
-            baseOrientation=orientation,
-            flags=p.URDF_USE_SELF_COLLISION | p.URDF_ENABLE_CACHED_GRAPHICS_SHAPES )
-
+            baseOrientation=orientation
+            )
+# flags=p.URDF_USE_SELF_COLLISION | p.URDF_ENABLE_CACHED_GRAPHICS_SHAPES | p.URDF_USE_MATERIAL_COLORS_FROM_MTL
         self.ik_idx = ik_idx
         self._joint_name_to_ids = {}
         self.joints = []
@@ -213,8 +214,8 @@ class Manipulator:
         return result[0], result[1]
 
     def get_tip_vel(self):
-        _,_,_,_,_,_,result,_ = self._p.getLinkState(self.arm, self.ik_idx,1)
-        return result
+        _,_,_,_,_,_,vel,angle_vel = self._p.getLinkState(self.arm, self.ik_idx,1)
+        return vel, angle_vel
     
     # 设置debug时的按键
     def add_debug_param(self):

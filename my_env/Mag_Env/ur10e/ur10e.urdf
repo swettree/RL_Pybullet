@@ -228,7 +228,7 @@
         ixy="0"
         ixz="0"
         iyy="4.1508E-07"
-        iyz="-1.27077401336148E-23"
+        iyz="0"
         izz="2.0754E-07" />
     </inertial>
     <visual>
@@ -239,7 +239,7 @@
       <material
         name="">
         <color
-          rgba="0.5 0 0.5 1" />
+          rgba="1.0 1.0 1.0 1.0" />
       </material>
     </visual>
     <collision>
