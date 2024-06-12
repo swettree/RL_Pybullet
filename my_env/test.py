@@ -2,7 +2,7 @@ from Mag_Env.envs.joint_pos_task import MagnetEnv
 from Mag_Env.envs.OSC_task import MagnetEnv_OSC
 from Mag_Env.envs.OSC_topoint_task import Env_topoint_OSC
 SLEEP = False
-
+import time
 
 env = MagnetEnv_OSC(gui=1)
 # env = Env_topoint_OSC(gui=1)
@@ -36,7 +36,7 @@ env.reset()
 # print("tool info2:", info2)
 # print("tool info3:", info3)
 #action1 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.25]
-
+lasttime = time.time()
 while True:
 
 
@@ -64,11 +64,19 @@ while True:
     #env._p.applyExternalTorque(env.obj, -1, t.flatten(), env._p.WORLD_FRAME)
     #env.agent.add_debug_param()
     #env.agent.update_debug()
-
+    
     env.test_step()
+    v,_ = env.agent.get_tip_vel()
+    print(v)
     contact1 = env._p.getContactPoints(env.env_dict["table"], env.obj)
     contact2 = env._p.getContactPoints(env.obj, env.agent.arm)
-    # if (contact2):
-    #     env.reset()
+    if (contact2):
+        current_time = time.time()
+        if lasttime is not None:
+            interval = current_time - lasttime
+            # print(f"间隔时间: {interval:.6f} 秒")
+        lasttime = current_time
+        env.reset()
+
 
 

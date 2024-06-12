@@ -28,13 +28,13 @@
   <link name="base_link">
     <visual>
       <geometry>
-        <mesh filename="visual/base.dae"/>
+        <mesh filename="package://ur10e/visual/base.dae"/>
       </geometry>
       <material name="LightGrey"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="collision/base.stl"/>
+        <mesh filename="package://ur10e/collision/base.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -57,13 +57,13 @@
   <link name="shoulder_link">
     <visual>
       <geometry>
-        <mesh filename="visual/shoulder.dae"/>
+        <mesh filename="package://ur10e/visual/shoulder.dae"/>
       </geometry>
       <material name="DarkGrey"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="collision/shoulder.stl"/>
+        <mesh filename="package://ur10e/collision/shoulder.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -85,13 +85,13 @@
   <link name="upper_arm_link">
     <visual>
       <geometry>
-        <mesh filename="visual/upperarm.dae"/>
+        <mesh filename="package://ur10e/visual/upperarm.dae"/>
       </geometry>
       <material name="LightGrey"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="collision/upperarm.stl"/>
+        <mesh filename="package://ur10e/collision/upperarm.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -113,13 +113,13 @@
   <link name="forearm_link">
     <visual>
       <geometry>
-        <mesh filename="visual/forearm.dae"/>
+        <mesh filename="package://ur10e/visual/forearm.dae"/>
       </geometry>
       <material name="DarkGrey"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="collision/forearm.stl"/>
+        <mesh filename="package://ur10e/collision/forearm.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -141,13 +141,13 @@
   <link name="wrist_1_link">
     <visual>
       <geometry>
-        <mesh filename="visual/wrist1.dae"/>
+        <mesh filename="package://ur10e/visual/wrist1.dae"/>
       </geometry>
       <material name="LightGrey"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="collision/wrist1.stl"/>
+        <mesh filename="package://ur10e/collision/wrist1.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -169,13 +169,13 @@
   <link name="wrist_2_link">
     <visual>
       <geometry>
-        <mesh filename="visual/wrist2.dae"/>
+        <mesh filename="package://ur10e/visual/wrist2.dae"/>
       </geometry>
       <material name="DarkGrey"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="collision/wrist2.stl"/>
+        <mesh filename="package://ur10e/collision/wrist2.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -197,13 +197,13 @@
   <link name="wrist_3_link">
     <visual>
       <geometry>
-        <mesh filename="visual/wrist3.dae"/>
+        <mesh filename="package://ur10e/visual/wrist3.dae"/>
       </geometry>
       <material name="LightGrey"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="collision/wrist3.stl"/>
+        <mesh filename="package://ur10e/collision/wrist3.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -214,38 +214,39 @@
   </link>
 
   <joint name="tool0_fixed_joint" type="fixed">
-    <origin rpy="0 3.141592653589793 0" xyz="0 0.137 0"/> # 0.117
+    <origin rpy="0 1.5707963267948966 0" xyz="0 0.137 0"/> 
     <parent link="wrist_3_link"/>
     <child link="ma"/>
   </joint>
-
+<!-- 3.141592653589793 -->
   <link name="ma">
     <inertial>
-      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
+      <!-- <origin xyz="0 0 0" rpy="1.5707963267948966 0 0" />  -->
+      <origin xyz="0 0 0" rpy="-1.5707963267948966 0 0" /> 
       <mass value="5E-05" />
       <inertia
-        ixx="2.0754E-07"
+        ixx="7.3505E-09"
         ixy="0"
         ixz="0"
-        iyy="4.1508E-07"
+        iyy="6.3004E-09"
         iyz="0"
-        izz="2.0754E-07" />
+        izz="7.3505E-09" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
+      <origin xyz="0 0 0" rpy="-1.5707963267948966 0 0" />
       <geometry>
-        <mesh filename="ma/meshes/ma.STL" />
+        <mesh filename="package://ur10e/ma/meshes/ma2.STL" />
       </geometry>
       <material
         name="">
         <color
-          rgba="1.0 1.0 1.0 1.0" />
+          rgba="0.70588 0.70588 0.70588 1" />
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
+      <origin xyz="0 0 0" rpy="-1.5707963267948966 0 0" />
       <geometry>
-        <mesh filename="ma/meshes/ma.STL" />
+        <mesh filename="package://ur10e/ma/meshes/ma2.STL" />
       </geometry>
     </collision>
   </link>

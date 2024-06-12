@@ -34,6 +34,7 @@ class Manipulator:
         self.fixed_names = []
         for i in range(self._p.getNumJoints(self.arm)):
             info = self._p.getJointInfo(self.arm, i)
+            #print(info)
             if info[2] != self._p.JOINT_FIXED:
                 # 关节序号(0 - )
                 self.joints.append(i)
@@ -138,6 +139,7 @@ class Manipulator:
         return lower_limits, upper_limits, joint_ranges, rest_poses
     
     def set_joint_position(self, position, velocity=None, t=None, sleep=False, traj=False):
+        
         assert len(self.joints) > 0
         if traj:
             assert (t is not None)
@@ -165,12 +167,25 @@ class Manipulator:
                     targetVelocities=velocity,
                     forces=self.forces)
             else:
+                # for jointIndex in range(self.num_joints):
+                #     self._p.setJointMotorControl2(
+                #     bodyIndex=self.arm,
+                #     jointIndex=jointIndex,
+                #     controlMode=self._p.POSITION_CONTROL,
+                #     targetPosition=position[jointIndex],
+                #     force=self.forces[jointIndex],
+                #     positionGain=400,
+                #     velocityGain=40)
+
                 self._p.setJointMotorControlArray(
                     bodyUniqueId=self.arm,
                     jointIndices=self.joints,
                     controlMode=self._p.POSITION_CONTROL,
                     targetPositions=position,
-                    forces=self.forces)
+                    forces=self.forces,
+                    positionGains=[0.1] * len(self.joints),
+                    velocityGains=[0.9] * len(self.joints)
+                    )
             self._waitsleep(t, sleep)
 
     # 设置关节速度
