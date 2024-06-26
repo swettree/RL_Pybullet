@@ -59,15 +59,14 @@ while True:
     # env._p.applyExternalForce(env.obj, -1, f.flatten(), [0, 0, 0], env._p.LINK_FRAME)
     # env._p.resetBasePositionAndOrientation(env.obj, env.mc_position, env.target_mc_Orientation_quaternion)
 
-    #ma_position, _ = env._p.getBasePositionAndOrientation(env.tool_id)
-    #print("ma_position:", ma_position)
+
     #env._p.applyExternalTorque(env.obj, -1, t.flatten(), env._p.WORLD_FRAME)
     #env.agent.add_debug_param()
     #env.agent.update_debug()
     
     env.test_step()
     v,_ = env.agent.get_tip_vel()
-    print(v)
+
     contact1 = env._p.getContactPoints(env.env_dict["table"], env.obj)
     contact2 = env._p.getContactPoints(env.obj, env.agent.arm)
     if (contact2):

@@ -26,8 +26,8 @@ class MagnetEnv_OSC(gym.Env):
     def __init__(self,gui=1,mode ="P",record=False,T_sens = 200, V_sens=1, P_sens = 1, P_max_force=300):
 
         self._p = utils.connect(gui)
-        self._p.setRealTimeSimulation(0)
-        self.timeStep=1./ 100.
+        #self._p.setRealTimeSimulation(0)
+        self.timeStep=1./ 240.
         self._p.setTimeStep(self.timeStep)
 
         self._p.setPhysicsEngineParameter(numSubSteps=2)
@@ -56,13 +56,17 @@ class MagnetEnv_OSC(gym.Env):
         self.P_max_force = P_max_force
         self.render_mode = None
         
-        self.target_position = [0.3,0.0,1.2]
+        self.target_position = [0.5,0.0,1.6]
         self.target_vel = [0.0,0.0,0.0]
         self.target_point = [0.0,0.0,-1.0]
 
         self.action_fre = 2
         self.last_command_time = None
 
+
+ 
+        # self._render_sleep = 1
+        # self._last_frame_time = 0.0
         
         if(mode == 'T'):
             print('TORQUE CONTROL')
@@ -98,7 +102,7 @@ class MagnetEnv_OSC(gym.Env):
         #     high = np.array([2, 2, 2, 3.14, 3.14, 3.14, 0.5,0.5,0.5,1, 1, 1, 1, 1, 1,3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 2, 2, 2, 2, 2, 2, 2, 2, 2,1])
         # )
         q_pos_low, q_pos_high = np.array([-3.14,-3.14,-3.14,-3.14,-3.14,-3.14]),np.array([3.14,3.14,3.14,3.14,3.14,3.14]) # 6
-        q_vel_low, q_vel_high = np.array([-0.8,-0.8,-0.8,-0.8,-0.8,-0.8]),np.array([0.8,0.8,0.8,0.8,0.8,0.8]) # 6
+        q_vel_low, q_vel_high = np.array([-3.14,-3.14,-3.14,-6.28,-6.28,-6.28]),np.array([3.14,3.14,3.14,6.28,6.28,6.28]) # 6
         eef_pos_low, eef_pos_high = np.array([-2,-2,-2]),np.array([2, 2, 2]) # 3
         eef_quat_low, eef_quat_high = np.array([-1,-1,-1,-1]),np.array([1, 1, 1, 1]) # 4
         eef_vel_low, eef_vel_high = np.array([-1,-1,-1,-1,-1,-1]),np.array([1, 1, 1, 1, 1, 1]) # 6
@@ -113,8 +117,8 @@ class MagnetEnv_OSC(gym.Env):
 
         #low = np.concatenate([q_pos_low, q_vel_low, eef_pos_low, eef_quat_low, eef_vel_low, capsule_pos_low, capsule_quat_low, capsule_linear_vel_low, capsule_pos_relative_low, mc_hat_low, target_pos_low, target_vel_low, target_point_low])
         #high = np.concatenate([q_pos_high, q_vel_high, eef_pos_high, eef_quat_high, eef_vel_high, capsule_pos_high, capsule_quat_high, capsule_linear_vel_high, capsule_pos_relative_high, mc_hat_high, target_pos_high, target_vel_high, target_point_high])
-        low = np.concatenate([q_pos_low, q_vel_low, eef_pos_low, eef_quat_low, eef_vel_low, target_pos_low])
-        high = np.concatenate([q_pos_high, q_vel_high, eef_pos_high, eef_quat_high, eef_vel_high, target_pos_high])
+        low = np.concatenate([q_pos_low,  eef_pos_low,  target_pos_low])
+        high = np.concatenate([q_pos_high,  eef_pos_high,  target_pos_high])
 
         self.observation_space = gym.spaces.box.Box(    #change later
             low = low,
@@ -254,42 +258,43 @@ class MagnetEnv_OSC(gym.Env):
         q_pos = self.agent.get_joint_position()
         observation.extend(list(q_pos))
         """q_vel  6"""
-        q_vel = self.agent.get_joint_velocity()
-        observation.extend(list(q_vel))
+        # q_vel = self.agent.get_joint_velocity()
+        # observation.extend(list(q_vel))
+        # print(q_vel)
         """eef_pos  3"""
         state = self.agent.get_tip_pose()
         tip_pos = state[0]
         observation.extend(list(tip_pos))
-
+        # print(tip_pos)
         """eef_quat  4"""
-        tip_orn = state[1]
-        if self._control_eu_or_quat == 0:
-            euler = self._p.getEulerFromQuaternion(tip_orn)
-            observation.extend(list(euler))  # roll, pitch, yaw
-            #observation_lim.extend(self._eu_lim)
-        else:
-            observation.extend(list(tip_orn))
+        # tip_orn = state[1]
+        # if self._control_eu_or_quat == 0:
+        #     euler = self._p.getEulerFromQuaternion(tip_orn)
+        #     observation.extend(list(euler))  # roll, pitch, yaw
+        #     #observation_lim.extend(self._eu_lim)
+        # else:
+        #     observation.extend(list(tip_orn))
             #observation_lim.extend([[-1, 1], [-1, 1], [-1, 1], [-1, 1]])
         """eef_vel  6"""
-        tip_vel ,tip_angle_vel= self.agent.get_tip_vel()
-        observation.extend(list(tip_vel))
-        observation.extend(list(tip_angle_vel))
-        # """capsule_pos  3"""
+        # tip_vel ,tip_angle_vel= self.agent.get_tip_vel()
+        # observation.extend(list(tip_vel))
+        # observation.extend(list(tip_angle_vel))
+        """capsule_pos  3"""
         # obj_pos, obj_ori = self._p.getBasePositionAndOrientation(self.obj)
         # #obj_ori_euler = self._p.getEulerFromQuaternion(obj_ori)
         # observation.extend(list(obj_pos))
 
-        # """capsule_quat  4"""
+        """capsule_quat  4"""
         # observation.extend(list(obj_ori))
 
-        # """capsule_linear_vel  3"""
+        """capsule_linear_vel  3"""
         # obj_vel, _ = self._p.getBaseVelocity(self.obj)
         # observation.extend(list(obj_vel))
 
-        # """capsule_pos_relative  3"""
+        """capsule_pos_relative  3"""
         # observation.extend(list(self.p_delta.squeeze()))
 
-        # """mc_hat  3"""
+        """mc_hat  3"""
         # observation.extend(list(self.mc_hat.squeeze()))
 
         """target_pos  3"""
@@ -300,7 +305,7 @@ class MagnetEnv_OSC(gym.Env):
 
         # """target_point  3"""
         # observation.extend(list(self.target_point))
-
+        # observation_clip = np.clip(observation,self.clip_ob_min,self.clip_ob_max)
 
         return observation
 
@@ -515,13 +520,13 @@ class MagnetEnv_OSC(gym.Env):
         
         # Combine translational and rotational Jacobians
         jac = np.vstack((jac_t, jac_r))
-        print(jac)
+
         # Compute DLS solution
         jac_T = jac.T
         lmbda = np.eye(6) * (damping ** 2)
         dpose = np.array(dpose).reshape(-1, 1)
         
-        dq = np.dot(np.dot(np.linalg.inv(np.dot(jac, jac_T) + lmbda), jac_T), dpose)
+        dq = np.dot(np.dot(jac_T , np.linalg.inv(np.dot(jac, jac_T) + lmbda) ), dpose)
         dq = dq.flatten()
         
         return dq
@@ -529,7 +534,14 @@ class MagnetEnv_OSC(gym.Env):
     def get_reward(self):
         pass
     
-    def step(self,action, count=13):
+    def step(self,action):
+        
+        # if self._render_sleep:
+        #     time_spent = time.time() - self._last_frame_time
+        #     self._last_frame_time = time.time()
+        #     time_to_sleep = self._action_repeat * self._time_step - time_spent
+        #     if time_to_sleep > 0:
+        #         time.sleep(time_to_sleep)
 
         self.magnet_update()
         f = self.total_force()
@@ -547,20 +559,9 @@ class MagnetEnv_OSC(gym.Env):
         state_object, _ = self._p.getBasePositionAndOrientation(self.obj)
         state_position_tip, _ = self.agent.get_tip_pose()
 
-        joint_indices = [0,1,2,3,4,5,6]
+        joint_indices = [0,1,2,3,4,5]
 
         dv = [0.2,0.2,0.2,0.2,0.2,0.2]
-
-        """test code"""
-        #t = self.get_magnetic_torque()
-        #self._p.applyExternalTorque(self.obj, -1, t.flatten(),  self._p.WORLD_FRAME)
-        # _, mco = self._p.getBasePositionAndOrientation(self.obj)
-
-        # _, mao = self._p.getBasePositionAndOrientation(self.tool_id)
-        # mco = self._p.getMatrixFromQuaternion(mco)
-        #print("f",f)
-        # print("t:",t)
-        # print("mco:",mco)
         #=========================================================================#
         #  Execute Actions                                                        #
         #=========================================================================#
@@ -568,31 +569,28 @@ class MagnetEnv_OSC(gym.Env):
         # METHOD 1: action = dx,dy,dz in cartesian space
 
          # default: 0.005, how big are the actions
-        dx = action[0] * dv[0]
-        dy = action[1] * dv[1]
-        dz = action[2] * dv[2]
+        # dx = action[0] * dv[0]
+        # dy = action[1] * dv[1]
+        # dz = action[2] * dv[2]
     
     
-        currentPosition , currentPose = self.agent.get_tip_pose()
+        # currentPosition , currentPose = self.agent.get_tip_pose()
     
-        newPosition = [currentPosition[0] + dx,
-                        currentPosition[1] + dy,
-                        currentPosition[2] + dz]
+        # newPosition = [currentPosition[0] + dx,
+        #                 currentPosition[1] + dy,
+        #                 currentPosition[2] + dz]
     
-        currentPose_Euler = self._p.getEulerFromQuaternion(currentPose)
+        # currentPose_Euler = self._p.getEulerFromQuaternion(currentPose)
     
-        dyaw = action[3] * dv[3]
-        dpitch = action[4] * dv[4]
-        droll = action[5] * dv[5]
+        # dyaw = action[3] * dv[3]
+        # dpitch = action[4] * dv[4]
+        # droll = action[5] * dv[5]
     
-        newPose_Euler = [currentPose_Euler[0] + dyaw,
-                    currentPose_Euler[1] + dpitch,
-                    currentPose_Euler[2] + droll]
+        # newPose_Euler = [currentPose_Euler[0] + dyaw,
+        #             currentPose_Euler[1] + dpitch,
+        #             currentPose_Euler[2] + droll]
     
-
-        #target_tip_ori = self.init_tip_ori
-        if (self.step_counter % self.action_fre == 0):
-            self.agent.set_cartesian_position(position=newPosition, orientation=newPose_Euler)
+        # self.agent.set_cartesian_position(position=newPosition, orientation=newPose_Euler)
 
 
         # METHOD 2: action = delta_q
@@ -609,16 +607,39 @@ class MagnetEnv_OSC(gym.Env):
         #                           pos_sens=self.P_sens, P_mx_fr=self.P_max_force)
 
         
-        self._p.stepSimulation()
-        time.sleep(self.timeStep)
+        # METHOD 3: 阻尼最小二乘
+            
+        dq = self.damped_least_squares_ik(self.agent.arm, 6, joint_indices, action)
         
-        state_object, _ = self._p.getBasePositionAndOrientation(self.obj)
-        state_position_tip, _ = self.agent.get_tip_pose()
+        joint_states = self._p.getJointStates(self.agent.arm, joint_indices)
+        joint_positions = [state[0] for state in joint_states]
+        
+        joint_target_pos = joint_positions + dq * dv
+        
+
+        self.agent.set_joint_position(joint_target_pos)
+
+        # print("目标关节位置:", joint_target_pos)
+
+
+        # METHOD 4: 速度控制
+        # cmd_limit = [1.56, 1.56, 1.56, 3.14, 3.14, 3.14]
+        # dq = np.array(action) * cmd_limit
+        # self.agent.apply_action(dq, self.mode,torque_sens=None,pos_sens=None, vel_sens=1,P_mx_fr=None)
+
+        for i in range(4):
+            self._p.stepSimulation()
+            time.sleep(self.timeStep)
+        
+        
+
 
     # =========================================================================#
     #  Reward Function and Episode End States                                 #
     # =========================================================================#
 
+        state_object, _ = self._p.getBasePositionAndOrientation(self.obj)
+        state_position_tip, _ = self.agent.get_tip_pose()
     # Dense Reward:
         d_scale = 1.5
         contact_scale = 0.5
@@ -673,7 +694,7 @@ class MagnetEnv_OSC(gym.Env):
 
         reward = reach_reward + keep_reward
 
-
+        #print(state_position_tip)
        
         # End episode
         self.step_counter += 1
@@ -681,11 +702,11 @@ class MagnetEnv_OSC(gym.Env):
 
             self.terminated = True
         # print("REWARD: ",reward)
-        self.obs= self.get_observation()
+        self.obs = self.get_observation()
         
         #scaled_obs = utils.scale_gym_data(self.observation_space, obs)
         self.info = {"reward":reward}
-        #print("obs:", obs)
+        # print("obs:", self.obs)
         return np.array(self.obs).astype(np.float32), reward, self.terminated, self.truncated, self.info
 
 
@@ -721,59 +742,66 @@ class MagnetEnv_OSC(gym.Env):
         # self._p.addUserDebugLine(mc_pos, mc_pos_z_end, [0, 0, 1], lineWidth=2,lifeTime=0.09)
 
         """pybullet 自带api"""
-        dv = 0.003
-        action = [0,0,-1,0,0,0]
-        dx = action[0] * dv
-        dy = action[1] * dv
-        dz = action[2] * dv
+        # dv = 0.005
+        # action = [0,0,1,0,0,0]
+        # dx = action[0] * dv
+        # dy = action[1] * dv
+        # dz = action[2] * dv
     
     
-        currentPosition , currentPose = self.agent.get_tip_pose()
+        # currentPosition , currentPose = self.agent.get_tip_pose()
     
-        newPosition = [currentPosition[0] + dx,
-                        currentPosition[1] + dy,
-                        currentPosition[2] + dz]
+        # newPosition = [currentPosition[0] + dx,
+        #                 currentPosition[1] + dy,
+        #                 currentPosition[2] + dz]
     
-        currentPose_Euler = self._p.getEulerFromQuaternion(currentPose)
+        # currentPose_Euler = self._p.getEulerFromQuaternion(currentPose)
     
-        dyaw = action[3] * dv
-        dpitch = action[4] * dv
-        droll = action[5] * dv
+        # dyaw = action[3] * dv
+        # dpitch = action[4] * dv
+        # droll = action[5] * dv
     
-        newPose_Euler = [currentPose_Euler[0] + dyaw,
-                    currentPose_Euler[1] + dpitch,
-                    currentPose_Euler[2] + droll]
+        # newPose_Euler = [currentPose_Euler[0] + dyaw,
+        #             currentPose_Euler[1] + dpitch,
+        #             currentPose_Euler[2] + droll]
         
-        newOrientation = self._p.getQuaternionFromEuler(newPose_Euler)
-        # if (self.step_counter % 2 == 0):
-        #     current_time = time.time()
-        #     if self.last_command_time is not None:
-        #         interval = current_time - self.last_command_time
-        #         print(f"间隔时间: {interval:.6f} 秒")
-        #     self.last_command_time = current_time
+        # newOrientation = self._p.getQuaternionFromEuler(newPose_Euler)
+        # # if (self.step_counter % 2 == 0):
+        # #     current_time = time.time()
+        # #     if self.last_command_time is not None:
+        # #         interval = current_time - self.last_command_time
+        # #         print(f"间隔时间: {interval:.6f} 秒")
+        # #     self.last_command_time = current_time
 
-        self.agent.set_cartesian_position(position=newPosition, orientation=newOrientation)
+        # self.agent.set_cartesian_position(position=newPosition, orientation=newOrientation)
             
         """手写阻尼IK"""
-        # jointindices = [0,1,2,3,4,5]
+        jointindices = [0,1,2,3,4,5]
 
         
-        # d_action = [0,0,-0.003,0,0,0]
-        # dq = self.damped_least_squares_ik(self.agent.arm, 6, jointindices, d_action)
+        d_action = [0,0,-0.003,0,0,0]
+        dq = self.damped_least_squares_ik(self.agent.arm, 6, jointindices, d_action)
         
-        # joint_states = self._p.getJointStates(self.agent.arm, jointindices)
-        # joint_positions = [state[0] for state in joint_states]
+        joint_states = self._p.getJointStates(self.agent.arm, jointindices)
+        joint_positions = [state[0] for state in joint_states]
         
-        # joint_target_pos = joint_positions + dq
-        # if (self.step_counter % 2 == 0):
+        joint_target_pos = joint_positions + dq
+        
 
-        #     self.agent.set_joint_position(joint_target_pos)
+        self.agent.set_joint_position(joint_target_pos)
 
-        # joint_target_pos = np.array(joint_positions) + dq
         # print("目标关节位置:", joint_target_pos)
 
-        self._p.stepSimulation()
-        time.sleep(self.timeStep)
+        """速度控制"""
+
+        # cmd_limit = [1.56, 1.56, 1.56, 3.14, 3.14, 3.14]
+        # dq = np.array(action) * cmd_limit
+        # self.agent.apply_action(dq, self.mode,vel_sens=1)
+
+        # 30Hz
+        for i in range(8):
+            self._p.stepSimulation()
+            
         self.step_counter += 1
         
 

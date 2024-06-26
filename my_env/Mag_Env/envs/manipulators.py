@@ -34,7 +34,8 @@ class Manipulator:
         self.fixed_names = []
         for i in range(self._p.getNumJoints(self.arm)):
             info = self._p.getJointInfo(self.arm, i)
-            #print(info)
+            # print(info)
+        
             if info[2] != self._p.JOINT_FIXED:
                 # 关节序号(0 - )
                 self.joints.append(i)
@@ -68,13 +69,13 @@ class Manipulator:
         elif (mode == 'V'):
             mode = p.VELOCITY_CONTROL
             action = action * vel_sens
-            p.setJointMotorControlArray(self.arm, self.joints, mode, targetVelocities=action,
+            p.setJointMotorControlArray(self.arm, self.joints, mode, forces=self.forces ,targetVelocities=action,velocityGains=[2] * len(self.joints)
                                         )
         elif (mode == 'P'):
             max_force = P_mx_fr * np.ones(6)
             mode = p.POSITION_CONTROL
             action = action * pos_sens
-            p.setJointMotorControlArray(self.arm, self.joints, mode, targetPositions=action, forces=max_force,
+            p.setJointMotorControlArray(self.arm, self.joints, mode, targetPositions=action, forces=max_force, 
                                         )
 
     # 连接工具
@@ -101,6 +102,7 @@ class Manipulator:
             endEffectorLinkIndex=self.ik_idx,
             targetPosition=position,
             targetOrientation=orientation)
+        # print(target_joints)
         self.set_joint_position(target_joints, t=t, sleep=sleep, traj=traj)
 
     # 设置笛卡尔坐标系运动轨迹
@@ -167,26 +169,29 @@ class Manipulator:
                     targetVelocities=velocity,
                     forces=self.forces)
             else:
-                # for jointIndex in range(self.num_joints):
-                #     self._p.setJointMotorControl2(
-                #     bodyIndex=self.arm,
-                #     jointIndex=jointIndex,
-                #     controlMode=self._p.POSITION_CONTROL,
-                #     targetPosition=position[jointIndex],
-                #     force=self.forces[jointIndex],
-                #     positionGain=400,
-                #     velocityGain=40)
-
-                self._p.setJointMotorControlArray(
-                    bodyUniqueId=self.arm,
-                    jointIndices=self.joints,
+                for jointIndex in range(self.num_joints):
+                    self._p.setJointMotorControl2(
+                    bodyIndex=self.arm,
+                    jointIndex=jointIndex,
                     controlMode=self._p.POSITION_CONTROL,
-                    targetPositions=position,
-                    forces=self.forces,
-                    positionGains=[0.1] * len(self.joints),
-                    velocityGains=[0.9] * len(self.joints)
+                    targetPosition=position[jointIndex],
+                    force=self.forces[jointIndex],
+                    # positionGain=400,
+                    # velocityGain=40,
+                    maxVelocity=self.max_velocity[jointIndex],
                     )
-            self._waitsleep(t, sleep)
+
+                # self._p.setJointMotorControlArray(
+                #     bodyUniqueId=self.arm,
+                #     jointIndices=self.joints,
+                #     controlMode=self._p.POSITION_CONTROL,
+                #     targetPositions=position,
+                #     forces=self.forces,
+                #     # positionGains=[0.1] * len(self.joints),
+                #     # velocityGains=[0.9] * len(self.joints)，
+                    
+                #     )
+            #self._waitsleep(t, sleep)
 
     # 设置关节速度
     def set_joint_velocity(self, velocity, t=None, sleep=False):
