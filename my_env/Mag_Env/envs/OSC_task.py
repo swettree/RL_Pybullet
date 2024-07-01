@@ -56,7 +56,7 @@ class MagnetEnv_OSC(gym.Env):
         self.P_max_force = P_max_force
         self.render_mode = None
         
-        self.target_position = [0.5,0.0,1.6]
+        self.target_position = [0.2,0.0,1.35]
         self.target_vel = [0.0,0.0,0.0]
         self.target_point = [0.0,0.0,-1.0]
 
@@ -115,10 +115,10 @@ class MagnetEnv_OSC(gym.Env):
         target_vel_low, target_vel_high = np.array([-1,-1,-1]),np.array([1, 1, 1]) # 3
         target_point_low, target_point_high = np.array([-1,-1,-1]),np.array([1, 1, 1]) # 3
 
-        #low = np.concatenate([q_pos_low, q_vel_low, eef_pos_low, eef_quat_low, eef_vel_low, capsule_pos_low, capsule_quat_low, capsule_linear_vel_low, capsule_pos_relative_low, mc_hat_low, target_pos_low, target_vel_low, target_point_low])
-        #high = np.concatenate([q_pos_high, q_vel_high, eef_pos_high, eef_quat_high, eef_vel_high, capsule_pos_high, capsule_quat_high, capsule_linear_vel_high, capsule_pos_relative_high, mc_hat_high, target_pos_high, target_vel_high, target_point_high])
-        low = np.concatenate([q_pos_low,  eef_pos_low,  target_pos_low])
-        high = np.concatenate([q_pos_high,  eef_pos_high,  target_pos_high])
+        low = np.concatenate([q_pos_low, q_vel_low, eef_pos_low, eef_quat_low, eef_vel_low, capsule_pos_low, capsule_quat_low, capsule_linear_vel_low, capsule_pos_relative_low, mc_hat_low, target_pos_low, target_vel_low, target_point_low])
+        high = np.concatenate([q_pos_high, q_vel_high, eef_pos_high, eef_quat_high, eef_vel_high, capsule_pos_high, capsule_quat_high, capsule_linear_vel_high, capsule_pos_relative_high, mc_hat_high, target_pos_high, target_vel_high, target_point_high])
+        # low = np.concatenate([q_pos_low,  eef_pos_low,  target_pos_low])
+        # high = np.concatenate([q_pos_high,  eef_pos_high,  target_pos_high])
 
         self.observation_space = gym.spaces.box.Box(    #change later
             low = low,
@@ -258,8 +258,8 @@ class MagnetEnv_OSC(gym.Env):
         q_pos = self.agent.get_joint_position()
         observation.extend(list(q_pos))
         """q_vel  6"""
-        # q_vel = self.agent.get_joint_velocity()
-        # observation.extend(list(q_vel))
+        q_vel = self.agent.get_joint_velocity()
+        observation.extend(list(q_vel))
         # print(q_vel)
         """eef_pos  3"""
         state = self.agent.get_tip_pose()
@@ -267,44 +267,44 @@ class MagnetEnv_OSC(gym.Env):
         observation.extend(list(tip_pos))
         # print(tip_pos)
         """eef_quat  4"""
-        # tip_orn = state[1]
-        # if self._control_eu_or_quat == 0:
-        #     euler = self._p.getEulerFromQuaternion(tip_orn)
-        #     observation.extend(list(euler))  # roll, pitch, yaw
-        #     #observation_lim.extend(self._eu_lim)
-        # else:
-        #     observation.extend(list(tip_orn))
-            #observation_lim.extend([[-1, 1], [-1, 1], [-1, 1], [-1, 1]])
+        tip_orn = state[1]
+        if self._control_eu_or_quat == 0:
+            euler = self._p.getEulerFromQuaternion(tip_orn)
+            observation.extend(list(euler))  # roll, pitch, yaw
+            #observation_lim.extend(self._eu_lim)
+        else:
+            observation.extend(list(tip_orn))
+            
         """eef_vel  6"""
-        # tip_vel ,tip_angle_vel= self.agent.get_tip_vel()
-        # observation.extend(list(tip_vel))
-        # observation.extend(list(tip_angle_vel))
+        tip_vel ,tip_angle_vel= self.agent.get_tip_vel()
+        observation.extend(list(tip_vel))
+        observation.extend(list(tip_angle_vel))
         """capsule_pos  3"""
-        # obj_pos, obj_ori = self._p.getBasePositionAndOrientation(self.obj)
-        # #obj_ori_euler = self._p.getEulerFromQuaternion(obj_ori)
-        # observation.extend(list(obj_pos))
+        obj_pos, obj_ori = self._p.getBasePositionAndOrientation(self.obj)
+        #obj_ori_euler = self._p.getEulerFromQuaternion(obj_ori)
+        observation.extend(list(obj_pos))
 
         """capsule_quat  4"""
-        # observation.extend(list(obj_ori))
+        observation.extend(list(obj_ori))
 
         """capsule_linear_vel  3"""
-        # obj_vel, _ = self._p.getBaseVelocity(self.obj)
-        # observation.extend(list(obj_vel))
+        obj_vel, _ = self._p.getBaseVelocity(self.obj)
+        observation.extend(list(obj_vel))
 
         """capsule_pos_relative  3"""
-        # observation.extend(list(self.p_delta.squeeze()))
+        observation.extend(list(self.p_delta.squeeze()))
 
         """mc_hat  3"""
-        # observation.extend(list(self.mc_hat.squeeze()))
+        observation.extend(list(self.mc_hat.squeeze()))
 
         """target_pos  3"""
         observation.extend(list(self.target_position))
 
-        # """target_vel  3"""
-        # observation.extend(list(self.target_vel))
+        """target_vel  3"""
+        observation.extend(list(self.target_vel))
 
-        # """target_point  3"""
-        # observation.extend(list(self.target_point))
+        """target_point  3"""
+        observation.extend(list(self.target_point))
         # observation_clip = np.clip(observation,self.clip_ob_min,self.clip_ob_max)
 
         return observation
@@ -561,7 +561,8 @@ class MagnetEnv_OSC(gym.Env):
 
         joint_indices = [0,1,2,3,4,5]
 
-        dv = [0.2,0.2,0.2,0.2,0.2,0.2]
+        dv = 0.2
+        action_scale = 3
         #=========================================================================#
         #  Execute Actions                                                        #
         #=========================================================================#
@@ -608,13 +609,14 @@ class MagnetEnv_OSC(gym.Env):
 
         
         # METHOD 3: 阻尼最小二乘
-            
-        dq = self.damped_least_squares_ik(self.agent.arm, 6, joint_indices, action)
+        osc_dq = action
+        osc_dq = osc_dq * dv/action_scale
+        dq = self.damped_least_squares_ik(self.agent.arm, 6, joint_indices, osc_dq)
         
         joint_states = self._p.getJointStates(self.agent.arm, joint_indices)
         joint_positions = [state[0] for state in joint_states]
         
-        joint_target_pos = joint_positions + dq * dv
+        joint_target_pos = joint_positions + dq 
         
 
         self.agent.set_joint_position(joint_target_pos)
