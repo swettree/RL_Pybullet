@@ -44,14 +44,14 @@ while True:
 
 
 
-    #print("ma_hat:", env.ma_hat)
-    #print("mc_hat:", env.mc_hat)
+    # print("ma_hat:", env.ma_hat)
+    # print("mc_hat:", env.mc_hat)
 
-    #print("target_mc:", env.target_mc_Orientation_quaternion)
+    # print("target_mc:", env.target_mc_Orientation_quaternion)
 
     # print(env.D())
-    #print("torque:",torque)
-    #print("t:", t)
+    # print("torque:",torque)
+    # print("t:", t)
     # env.calculate_mc_hat()
     # env._p.removeConstraint(constraint_id)
 
@@ -60,15 +60,22 @@ while True:
     # env._p.resetBasePositionAndOrientation(env.obj, env.mc_position, env.target_mc_Orientation_quaternion)
 
 
-    #env._p.applyExternalTorque(env.obj, -1, t.flatten(), env._p.WORLD_FRAME)
-    #env.agent.add_debug_param()
-    #env.agent.update_debug()
+    # env._p.applyExternalTorque(env.obj, -1, t.flatten(), env._p.WORLD_FRAME)
+    # env.agent.add_debug_param()
+    # env.agent.update_debug()
     
     env.test_step()
     v,_ = env.agent.get_tip_vel()
 
     contact1 = env._p.getContactPoints(env.env_dict["table"], env.obj)
     contact2 = env._p.getContactPoints(env.obj, env.agent.arm)
+
+    
+    # if(contact1):
+    #     print(env.ma_position[2] - env.mc_position[2])
+    # print(env.ma_position[2])
+
+
     if (contact2):
         current_time = time.time()
         if lasttime is not None:

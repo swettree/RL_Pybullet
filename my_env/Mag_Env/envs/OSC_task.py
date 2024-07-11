@@ -9,7 +9,7 @@ from gymnasium.utils import seeding
 import gymnasium as gym
 
 u0 = 4 * np.pi * 1e-7
-MAX_EPISODE_LEN = 600
+MAX_EPISODE_LEN = 10000
 
 gui = 1
 direct = 0
@@ -56,13 +56,13 @@ class MagnetEnv_OSC(gym.Env):
         self.P_max_force = P_max_force
         self.render_mode = None
         
-        self.target_position = [0.2,0.0,1.35]
+        self.target_position = [0.1,0.0,1.2]
         self.target_vel = [0.0,0.0,0.0]
         self.target_point = [0.0,0.0,-1.0]
-
+        self.pre_action = np.array([0,0,0,0,0,0])
         self.action_fre = 2
         self.last_command_time = None
-
+        
 
  
         # self._render_sleep = 1
@@ -101,8 +101,8 @@ class MagnetEnv_OSC(gym.Env):
         #     low = np.array([-2,-2,-2,-3.14 ,-3.14, -3.14,-0.5,-0.5,-0.5,-1,-1,-1,-1,-1,-1,-3.14 ,-3.14, -3.14, -3.14,-3.14,-3.14,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1]),
         #     high = np.array([2, 2, 2, 3.14, 3.14, 3.14, 0.5,0.5,0.5,1, 1, 1, 1, 1, 1,3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 2, 2, 2, 2, 2, 2, 2, 2, 2,1])
         # )
-        q_pos_low, q_pos_high = np.array([-3.14,-3.14,-3.14,-3.14,-3.14,-3.14]),np.array([3.14,3.14,3.14,3.14,3.14,3.14]) # 6
-        q_vel_low, q_vel_high = np.array([-3.14,-3.14,-3.14,-6.28,-6.28,-6.28]),np.array([3.14,3.14,3.14,6.28,6.28,6.28]) # 6
+        q_pos_low, q_pos_high = np.array([-3.141,-3.141,-3.141,-3.141,-3.141,-3.141]),np.array([3.141,3.141,3.141,3.141,3.141,3.141]) # 6
+        q_vel_low, q_vel_high = np.array([-3.141,-3.141,-3.141,-6.282,-6.282,-6.282]),np.array([3.141,3.141,3.141,6.282,6.282,6.282]) # 6
         eef_pos_low, eef_pos_high = np.array([-2,-2,-2]),np.array([2, 2, 2]) # 3
         eef_quat_low, eef_quat_high = np.array([-1,-1,-1,-1]),np.array([1, 1, 1, 1]) # 4
         eef_vel_low, eef_vel_high = np.array([-1,-1,-1,-1,-1,-1]),np.array([1, 1, 1, 1, 1, 1]) # 6
@@ -114,9 +114,14 @@ class MagnetEnv_OSC(gym.Env):
         target_pos_low, target_pos_high = np.array([-2,-2,-2]),np.array([2, 2, 2]) # 3
         target_vel_low, target_vel_high = np.array([-1,-1,-1]),np.array([1, 1, 1]) # 3
         target_point_low, target_point_high = np.array([-1,-1,-1]),np.array([1, 1, 1]) # 3
+        pre_action_low, pre_action_high = np.array([-1, -1, -1, -1, -1, -1]), np.array([1, 1, 1, 1, 1, 1])
+        ma_hat_low, ma_hat_high = np.array([-1,-1,-1]),np.array([1, 1, 1]) # 3
 
-        low = np.concatenate([q_pos_low, q_vel_low, eef_pos_low, eef_quat_low, eef_vel_low, capsule_pos_low, capsule_quat_low, capsule_linear_vel_low, capsule_pos_relative_low, mc_hat_low, target_pos_low, target_vel_low, target_point_low])
-        high = np.concatenate([q_pos_high, q_vel_high, eef_pos_high, eef_quat_high, eef_vel_high, capsule_pos_high, capsule_quat_high, capsule_linear_vel_high, capsule_pos_relative_high, mc_hat_high, target_pos_high, target_vel_high, target_point_high])
+        low = np.concatenate([q_pos_low, q_vel_low, eef_pos_low,  eef_vel_low,ma_hat_low, capsule_pos_low,  \
+                              capsule_linear_vel_low, capsule_pos_relative_low, mc_hat_low, target_pos_low, target_vel_low, target_point_low,pre_action_low])
+        
+        high = np.concatenate([q_pos_high, q_vel_high, eef_pos_high,  eef_vel_high,ma_hat_high, capsule_pos_high,  \
+                               capsule_linear_vel_high, capsule_pos_relative_high, mc_hat_high, target_pos_high, target_vel_high, target_point_high, pre_action_high])
         # low = np.concatenate([q_pos_low,  eef_pos_low,  target_pos_low])
         # high = np.concatenate([q_pos_high,  eef_pos_high,  target_pos_high])
 
@@ -196,6 +201,7 @@ class MagnetEnv_OSC(gym.Env):
         self._p.addUserDebugLine([0, 0, 0], [0, 2, 0], [0, 1, 0], lineWidth=2,lifeTime=0)
         self._p.addUserDebugLine([0, 0, 0], [0, 0, 2], [0, 0, 1], lineWidth=2,lifeTime=0)
 
+        self.lower_limits, self.upper_limits, self.joint_ranges, self.rest_poses = self.agent.get_joint_ranges()
         self.magnet_init(82.5, 0.1664)
 
         self.obs = self.get_observation()
@@ -267,25 +273,28 @@ class MagnetEnv_OSC(gym.Env):
         observation.extend(list(tip_pos))
         # print(tip_pos)
         """eef_quat  4"""
-        tip_orn = state[1]
-        if self._control_eu_or_quat == 0:
-            euler = self._p.getEulerFromQuaternion(tip_orn)
-            observation.extend(list(euler))  # roll, pitch, yaw
-            #observation_lim.extend(self._eu_lim)
-        else:
-            observation.extend(list(tip_orn))
+        # tip_orn = state[1]
+        # if self._control_eu_or_quat == 0:
+        #     euler = self._p.getEulerFromQuaternion(tip_orn)
+        #     observation.extend(list(euler))  # roll, pitch, yaw
+        #     #observation_lim.extend(self._eu_lim)
+        # else:
+        #     observation.extend(list(tip_orn))
             
         """eef_vel  6"""
         tip_vel ,tip_angle_vel= self.agent.get_tip_vel()
         observation.extend(list(tip_vel))
         observation.extend(list(tip_angle_vel))
+
+        """ma_hat 3"""
+        observation.extend(list(self.ma_hat.squeeze()))
         """capsule_pos  3"""
         obj_pos, obj_ori = self._p.getBasePositionAndOrientation(self.obj)
         #obj_ori_euler = self._p.getEulerFromQuaternion(obj_ori)
         observation.extend(list(obj_pos))
 
         """capsule_quat  4"""
-        observation.extend(list(obj_ori))
+        #observation.extend(list(obj_ori))
 
         """capsule_linear_vel  3"""
         obj_vel, _ = self._p.getBaseVelocity(self.obj)
@@ -305,6 +314,9 @@ class MagnetEnv_OSC(gym.Env):
 
         """target_point  3"""
         observation.extend(list(self.target_point))
+
+        """pre_action 6"""
+        observation.extend(list(self.pre_action))
         # observation_clip = np.clip(observation,self.clip_ob_min,self.clip_ob_max)
 
         return observation
@@ -344,31 +356,31 @@ class MagnetEnv_OSC(gym.Env):
 
 
 
-    def init_objects(self):
-        obj_type = self._p.GEOM_CYLINDER
-        position = [0.8, 0.0, 0.5]
-        rotation = [0, 0, 0]
-        if obj_type == self._p.GEOM_CYLINDER:
-            r = 0.0125
-            h = 0.025
-            size = [r, h]
-            #rotation = [np.pi/2, 0, np.pi]
-            rotation = [0, np.pi, 0]
-        else:
-            r = np.random.uniform(0.025, 0.05)
-            size = [r, r, r]
+    # def init_objects(self):
+    #     obj_type = self._p.GEOM_CYLINDER
+    #     position = [0.8, 0.0, 0.5]
+    #     rotation = [0, 0, 0]
+    #     if obj_type == self._p.GEOM_CYLINDER:
+    #         r = 0.0125
+    #         h = 0.025
+    #         size = [r, h]
+    #         #rotation = [np.pi/2, 0, np.pi]
+    #         rotation = [0, np.pi, 0]
+    #     else:
+    #         r = np.random.uniform(0.025, 0.05)
+    #         size = [r, r, r]
 
-        self.obj = utils.create_object(self._p, obj_type=obj_type, size=size, position=position,
-                                       rotation=rotation, color=[0.5,0,0.5,1], mass=0.00156)
+    #     self.obj = utils.create_object(self._p, obj_type=obj_type, size=size, position=position,
+    #                                    rotation=rotation, color=[0.5,0,0.5,1], mass=0.00156)
 
-        self._p.changeDynamics(self.obj, -1, lateralFriction=0.99) #0.05
-        self._p.changeDynamics(self.obj, -1, spinningFriction=0.05) #0.05
-        self._p.changeDynamics(self.obj, -1, rollingFriction=0.04)
-        self._p.changeDynamics(self.obj, -1, restitution=0.00)
-        self._p.changeDynamics(self.obj, -1, linearDamping=130) #50可以做到悬浮,last_value 100
-        self._p.changeDynamics(self.obj, -1, angularDamping=0.04) #初始0.04
-        self._p.changeDynamics(self.obj, -1, frictionAnchor=1)
-        self._p.changeDynamics(self.obj, -1, ccdSweptSphereRadius=0.02, contactProcessingThreshold=0.0)
+    #     self._p.changeDynamics(self.obj, -1, lateralFriction=0.99) #0.05
+    #     self._p.changeDynamics(self.obj, -1, spinningFriction=0.05) #0.05
+    #     self._p.changeDynamics(self.obj, -1, rollingFriction=0.04)
+    #     self._p.changeDynamics(self.obj, -1, restitution=0.00)
+    #     self._p.changeDynamics(self.obj, -1, linearDamping=130) #50可以做到悬浮,last_value 100
+    #     self._p.changeDynamics(self.obj, -1, angularDamping=0.04) #初始0.04
+    #     self._p.changeDynamics(self.obj, -1, frictionAnchor=1)
+    #     self._p.changeDynamics(self.obj, -1, ccdSweptSphereRadius=0.02, contactProcessingThreshold=0.0)
 
 
     def init_capsule(self):
@@ -380,21 +392,23 @@ class MagnetEnv_OSC(gym.Env):
         self.obj = self._p.loadURDF(
         # fileName=path,basePosition=position,baseOrientation=rotation,useMaximalCoordinates = True,
         #     flags=self._p.URDF_ENABLE_CACHED_GRAPHICS_SHAPES | self._p.URDF_MERGE_FIXED_LINKS )
-        fileName=path,basePosition=position,baseOrientation=rotation)
-        self._p.changeDynamics(self.obj, -1, lateralFriction=1) #0.05
-        self._p.changeDynamics(self.obj, -1, spinningFriction=0.02) #0.05
-        self._p.changeDynamics(self.obj, -1, rollingFriction=0.01)
+        fileName=path,basePosition=position,baseOrientation=rotation , flags= self._p.URDF_USE_INERTIA_FROM_FILE)
+        self._p.changeDynamics(self.obj, -1, lateralFriction=1.0) #0.05
+        self._p.changeDynamics(self.obj, -1, spinningFriction=0.0) #0.05
+        self._p.changeDynamics(self.obj, -1, rollingFriction=0.0)
         self._p.changeDynamics(self.obj, -1, restitution=0.0)
-        self._p.changeDynamics(self.obj, -1, linearDamping=15) #50可以做到悬浮,last_value 100
-        self._p.changeDynamics(self.obj, -1, angularDamping=5) #初始0.04
+        self._p.changeDynamics(self.obj, -1, linearDamping=5) #50可以做到悬浮,last_value 100
+        self._p.changeDynamics(self.obj, -1, angularDamping=3) #初始0.04
+
+
         # self._p.changeDynamics(self.obj, -1, contactStiffness=1e3, contactDamping=1e2) 
 
 
-        self._p.changeDynamics(self.env_dict["table"], -1, lateralFriction=1, spinningFriction=0.02, rollingFriction=0.01, restitution=0.0)
+        # self._p.changeDynamics(self.env_dict["table"], -1, lateralFriction=0.05, spinningFriction=0.03, rollingFriction=0.02, restitution=0.0)
         # self._p.changeDynamics(self.obj, -1, frictionAnchor=1)
 
         info = self._p.getDynamicsInfo(self.obj, -1)
-        #print(info)
+        # print(info)
 
     def magnet_init(self, ma_norm,mc_norm):
         self.ma_norm = ma_norm
@@ -410,6 +424,7 @@ class MagnetEnv_OSC(gym.Env):
     def D(self):
         I = np.eye(3)
         p_delta_hat_outer = np.dot(self.p_delta_hat, self.p_delta_hat.T)
+        # print(p_delta_hat_outer)
         return 3 * p_delta_hat_outer - I
     
 
@@ -479,20 +494,24 @@ class MagnetEnv_OSC(gym.Env):
 
     def total_force(self):
 
+        
+        _total_force = self.get_magnetic_force() + self.get_buoyancy_force()
 
-        total_force = self.get_magnetic_force() + self.get_buoyancy_force()
-        return total_force
+        return _total_force
 
     def get_magnetic_torque(self):
         
         #magnetic_torque = u0 * self.ma_norm * self.mc_norm / (4 * np.pi * (self.p_delta_norm ** 3)) * np.dot(np.cross(self.mc_hat, self.D()), self.ma_hat)
         # print()
         # print(np.dot(self.D(), self.ma_hat))
+        
         a = np.squeeze(self.mc_hat)
         b = np.squeeze(np.dot(self.D(), self.ma_hat))
         c = np.cross(a,b).reshape(3,1)
-        magnetic_torque = u0 * self.ma_norm * self.mc_norm / (4 * np.pi * (self.p_delta_norm ** 3)) * c
-        #print(c)
+        magnetic_torque = u0 * self.ma_norm * self.mc_norm / (4 * np.pi * (self.p_delta_norm ** 3)) * c 
+
+        # print(c)
+
         return magnetic_torque
 
     def get_jacobian(self, robot_id, end_effector_index, joint_indices):
@@ -548,10 +567,11 @@ class MagnetEnv_OSC(gym.Env):
         tau = self.get_magnetic_torque()
         ma_pos, ma_orn= self.ma_position , self.ma_o_Matrix
         mc_pos, mc_orn= self.mc_position , self.mc_o_Matrix
+        print("mc_pos:",mc_pos)
         # tau = np.around(tau, decimals=4)
         # tau = np.array([0, 0, 0])
         self._p.applyExternalForce(self.obj, -1, f.flatten(), mc_pos, self._p.WORLD_FRAME)
-        self._p.applyExternalTorque(self.obj, -1,tau.flatten(),self._p.WORLD_FRAME)
+        self._p.applyExternalTorque(self.obj, -1, tau.flatten(), self._p.WORLD_FRAME)
 
         reward = 0
 
@@ -610,14 +630,15 @@ class MagnetEnv_OSC(gym.Env):
         
         # METHOD 3: 阻尼最小二乘
         osc_dq = action
-        osc_dq = osc_dq * dv/action_scale
+        osc_dq = osc_dq * dv / action_scale
         dq = self.damped_least_squares_ik(self.agent.arm, 6, joint_indices, osc_dq)
         
         joint_states = self._p.getJointStates(self.agent.arm, joint_indices)
         joint_positions = [state[0] for state in joint_states]
         
         joint_target_pos = joint_positions + dq 
-        
+
+        joint_target_pos = np.clip(joint_target_pos,self.lower_limits,self.upper_limits)
 
         self.agent.set_joint_position(joint_target_pos)
 
@@ -629,11 +650,12 @@ class MagnetEnv_OSC(gym.Env):
         # dq = np.array(action) * cmd_limit
         # self.agent.apply_action(dq, self.mode,torque_sens=None,pos_sens=None, vel_sens=1,P_mx_fr=None)
 
-        for i in range(4):
+        for i in range(1):
+
             self._p.stepSimulation()
             time.sleep(self.timeStep)
         
-        
+        self.pre_action = action
 
 
     # =========================================================================#
@@ -714,12 +736,18 @@ class MagnetEnv_OSC(gym.Env):
 
     def test_step(self):
         
-        self.starttime = time.time()
+       
         self.magnet_update()
         f = self.total_force()
         tau = self.get_magnetic_torque()
         ma_pos, ma_orn= self.ma_position , self.ma_o_Matrix
+        
         mc_pos, mc_orn= self.mc_position , self.mc_o_Matrix
+        print(mc_pos)
+
+        # print("p",self.p_delta[2])
+        # print("f",f[2])
+        # print("t",tau)
         # tau = np.around(tau, decimals=4)
         # tau = np.array([0, 0, 0])
         self._p.applyExternalForce(self.obj, -1, f.flatten(), mc_pos, self._p.WORLD_FRAME)
@@ -781,15 +809,14 @@ class MagnetEnv_OSC(gym.Env):
         jointindices = [0,1,2,3,4,5]
 
         
-        d_action = [0,0,-0.003,0,0,0]
+
+        d_action = [0,0,-0.001,0,0,0]
         dq = self.damped_least_squares_ik(self.agent.arm, 6, jointindices, d_action)
         
         joint_states = self._p.getJointStates(self.agent.arm, jointindices)
         joint_positions = [state[0] for state in joint_states]
         
         joint_target_pos = joint_positions + dq
-        
-
         self.agent.set_joint_position(joint_target_pos)
 
         # print("目标关节位置:", joint_target_pos)
@@ -801,9 +828,9 @@ class MagnetEnv_OSC(gym.Env):
         # self.agent.apply_action(dq, self.mode,vel_sens=1)
 
         # 30Hz
-        for i in range(8):
+        for i in range(1):
             self._p.stepSimulation()
-            
+            time.sleep(self.timeStep)
         self.step_counter += 1
         
 

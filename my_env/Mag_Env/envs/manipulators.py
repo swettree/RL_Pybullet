@@ -21,11 +21,12 @@ class Manipulator:
         self.arm = self._p.loadURDF(
             fileName=path,
             basePosition=position,
-            baseOrientation=orientation
+            baseOrientation=orientation,flags = self._p.URDF_USE_MATERIAL_COLORS_FROM_MTL,
             )
 # flags=p.URDF_USE_SELF_COLLISION | p.URDF_ENABLE_CACHED_GRAPHICS_SHAPES | p.URDF_USE_MATERIAL_COLORS_FROM_MTL
         self.ik_idx = ik_idx
-        self._joint_name_to_ids = {}
+        self._joint_name_to_ids = { 'shoulder_pan_joint':0, 'shoulder_lift_joint':1, 'elbow_joint':2,
+        'wrist_1_joint':3, 'wrist_2_joint':4, 'wrist_3_joint':5}
         self.joints = []
         self.names = []
         self.forces = []
@@ -57,6 +58,8 @@ class Manipulator:
         self.constraints = []
         for j in self.joints:
             self._p.enableJointForceTorqueSensor(self.arm, j, 1)
+
+        
 
     def apply_action(self, action, mode, torque_sens, vel_sens, pos_sens, P_mx_fr):
         ## CHANGE

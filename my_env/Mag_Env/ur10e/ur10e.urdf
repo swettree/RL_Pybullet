@@ -34,7 +34,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://ur10e/collision/base.stl"/>
+        <mesh filename="package://ur10e/collision/base.obj"/>
       </geometry>
     </collision>
     <inertial>
@@ -63,7 +63,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://ur10e/collision/shoulder.stl"/>
+        <mesh filename="package://ur10e/collision/shoulder.obj"/>
       </geometry>
     </collision>
     <inertial>
@@ -91,7 +91,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://ur10e/collision/upperarm.stl"/>
+        <mesh filename="package://ur10e/collision/upperarm.obj"/>
       </geometry>
     </collision>
     <inertial>
@@ -119,7 +119,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://ur10e/collision/forearm.stl"/>
+        <mesh filename="package://ur10e/collision/forearm.obj"/>
       </geometry>
     </collision>
     <inertial>
@@ -147,7 +147,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://ur10e/collision/wrist1.stl"/>
+        <mesh filename="package://ur10e/collision/wrist1.obj"/>
       </geometry>
     </collision>
     <inertial>
@@ -175,7 +175,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://ur10e/collision/wrist2.stl"/>
+        <mesh filename="package://ur10e/collision/wrist2.obj"/>
       </geometry>
     </collision>
     <inertial>
@@ -203,7 +203,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://ur10e/collision/wrist3.stl"/>
+        <mesh filename="package://ur10e/collision/wrist3.obj"/>
       </geometry>
     </collision>
     <inertial>
@@ -225,17 +225,17 @@
       <origin xyz="0 0 0" rpy="-1.5707963267948966 0 0" /> 
       <mass value="5E-05" />
       <inertia
-        ixx="7.3505E-09"
+        ixx="2.0754E-07"
         ixy="0"
         ixz="0"
-        iyy="6.3004E-09"
+        iyy="4.1508E-07"
         iyz="0"
-        izz="7.3505E-09" />
+        izz="2.0754E-07" />
     </inertial>
     <visual>
       <origin xyz="0 0 0" rpy="-1.5707963267948966 0 0" />
       <geometry>
-        <mesh filename="package://ur10e/ma/meshes/ma2.STL" />
+        <mesh filename="package://ur10e/ma/meshes/ma.dae" />
       </geometry>
       <material
         name="">
@@ -246,7 +246,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="-1.5707963267948966 0 0" />
       <geometry>
-        <mesh filename="package://ur10e/ma/meshes/ma2.STL" />
+        <mesh filename="package://ur10e/ma/meshes/ma.obj" />
       </geometry>
     </collision>
   </link>
