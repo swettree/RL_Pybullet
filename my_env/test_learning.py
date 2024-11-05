@@ -1,49 +1,37 @@
-import gymnasium as gym
-import Mag_Env
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3 import PPO
-
-from stable_baselines3 import TD3
-from stable_baselines3.common.callbacks import EvalCallback
-from stable_baselines3.common.callbacks import CheckpointCallback
-from stable_baselines3.common.callbacks import CallbackList
-
-
-
+import torch
 import matplotlib.pyplot as plt
-import numpy as np
-import pickle
-import torch as th
+from mpl_toolkits.mplot3d import Axes3D
 
+# 改进的生成随机点的函数
+def generate_random_point(num_points):
+    # 生成均匀分布的极角 θ 在 [0, π] 范围内
+    theta = torch.acos(2 * torch.rand(num_points) - 1)
+    # 生成均匀分布的方位角 φ 在 [0, 2π] 范围内
+    phi = torch.rand(num_points) * 2 * torch.pi
 
-env = gym.make('MagnetEnv_OSC-v0',gui=1, mode='P',P_sens=1,P_max_force=60)
+    # 将球坐标转换为笛卡尔坐标
+    x = torch.sin(theta) * torch.cos(phi)
+    y = torch.sin(theta) * torch.sin(phi)
+    z = torch.cos(theta)
 
-model = PPO.load("Mag_OSC_model.zip", env=env,custom_objects={
-            "learning_rate": 0.0,
-            "lr_schedule": lambda _: 0.0,
-            "clip_range": lambda _: 0.0,})
+    # 生成的方向向量
+    point_hat = torch.stack([x, y, z], dim=1)
 
-rew = []
+    return point_hat
 
-for i in range(5):
-    terminated = False
-    obs,_ = env.reset()
-    while not terminated:
-        action, _state =model.predict(obs)
-        #action = np.array([0,0,0,0,0,0,0])
-        obs,reward,terminated,_,_ = env.step(action)
-        print(reward)
-        print(obs)
-        print(action)
-        #print(action)
-        if i==0:
-            rew.append(reward)
+# 生成1000个点
+num_points = 1000
+points = generate_random_point(num_points)
 
-t = np.arange(len(rew))
-print(sum(rew))
-fig,ax = plt.subplots()
-ax.plot(t,rew)
-ax.set_title("Testing")
-ax.set_xlabel("Timesteps")
-ax.set_ylabel("Rewards")
+# 将点转换为numpy数组以便于绘图
+points_np = points.numpy()
+
+# 绘制3D图
+fig = plt.figure(figsize=(8, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(points_np[:, 0], points_np[:, 1], points_np[:, 2], s=10)
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+ax.set_title('Randomly Generated Points on Unit Sphere')
 plt.show()
